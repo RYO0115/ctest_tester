@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  gtest-env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    command: bash -c "./coverage.sh"

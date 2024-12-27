@@ -4,7 +4,7 @@
 
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>LCOV - coverage_filtered.info - /app/test_class2/test/test2.cpp</title>
+  <title>LCOV - coverage_filtered.info - /app/test_class3/test/test3.cpp</title>
   <link rel="stylesheet" type="text/css" href="../../../gcov.css">
 </head>
 
@@ -19,7 +19,7 @@
         <table cellpadding=1 border=0 width="100%">
           <tr>
             <td width="10%" class="headerItem">Current view:</td>
-            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">app/test_class2/test</a> - test2.cpp<span style="font-size: 80%;"> (source / <a href="test2.cpp.func-sort-c.html">functions</a>)</span></td>
+            <td width="35%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">app/test_class3/test</a> - test3.cpp<span style="font-size: 80%;"> (source / <a href="test3.cpp.func-sort-c.html">functions</a>)</span></td>
             <td width="5%"></td>
             <td width="15%"></td>
             <td width="10%" class="headerCovTableHead">Hit</td>
@@ -31,8 +31,8 @@
             <td class="headerValue">coverage_filtered.info</td>
             <td></td>
             <td class="headerItem">Lines:</td>
-            <td class="headerCovTableEntry">4</td>
-            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">3</td>
+            <td class="headerCovTableEntry">3</td>
             <td class="headerCovTableEntryHi">100.0 %</td>
           </tr>
           <tr>
@@ -61,21 +61,20 @@
 <pre class="sourceHeading">          Line data    Source code</pre>
 <pre class="source">
 <a name="1"><span class="lineNum">       1 </span>            : </a>
-<a name="2"><span class="lineNum">       2 </span>            : #include &quot;class2.hpp&quot;</a>
+<a name="2"><span class="lineNum">       2 </span>            : #include &quot;class3.hpp&quot;</a>
 <a name="3"><span class="lineNum">       3 </span>            : #include &lt;gtest/gtest.h&gt;</a>
 <a name="4"><span class="lineNum">       4 </span>            : </a>
-<a name="5"><span class="lineNum">       5 </span><span class="lineCov">          4 : TEST(CalculatorSubTest,AddTest)</span></a>
+<a name="5"><span class="lineNum">       5 </span><span class="lineCov">          4 : TEST(CalculatorDivTest,AddTest)</span></a>
 <a name="6"><span class="lineNum">       6 </span>            : {</a>
-<a name="7"><span class="lineNum">       7 </span>            :     CalculatorSub calc;</a>
-<a name="8"><span class="lineNum">       8 </span><span class="lineCov">          1 :     EXPECT_EQ(calc.sub(3,2), 1);</span></a>
-<a name="9"><span class="lineNum">       9 </span><span class="lineCov">          1 :     EXPECT_EQ(calc.sub(5,6), -1);</span></a>
-<a name="10"><span class="lineNum">      10 </span><span class="lineCov">          1 : }</span></a>
-<a name="11"><span class="lineNum">      11 </span>            : </a>
-<a name="12"><span class="lineNum">      12 </span>            : //TEST(CalculatorSub, GreetTest)</a>
-<a name="13"><span class="lineNum">      13 </span>            : //{</a>
-<a name="14"><span class="lineNum">      14 </span>            : //    CalculatorSub calc;</a>
-<a name="15"><span class="lineNum">      15 </span>            : //    EXPECT_EQ(calc.greet(&quot;Alice&quot;), &quot;Hello, Alice!&quot;);</a>
-<a name="16"><span class="lineNum">      16 </span>            : //}</a>
+<a name="7"><span class="lineNum">       7 </span>            :     //CalculatorDiv c_div;</a>
+<a name="8"><span class="lineNum">       8 </span><span class="lineCov">          1 :     SUCCEED();</span></a>
+<a name="9"><span class="lineNum">       9 </span><span class="lineCov">          1 : }</span></a>
+<a name="10"><span class="lineNum">      10 </span>            : </a>
+<a name="11"><span class="lineNum">      11 </span>            : //TEST(CalculatorSub, GreetTest)</a>
+<a name="12"><span class="lineNum">      12 </span>            : //{</a>
+<a name="13"><span class="lineNum">      13 </span>            : //    CalculatorSub calc;</a>
+<a name="14"><span class="lineNum">      14 </span>            : //    EXPECT_EQ(calc.greet(&quot;Alice&quot;), &quot;Hello, Alice!&quot;);</a>
+<a name="15"><span class="lineNum">      15 </span>            : //}</a>
 </pre>
       </td>
     </tr>

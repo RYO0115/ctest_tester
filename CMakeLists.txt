@@ -10,3 +10,4 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
 add_subdirectory(test_class1)
 add_subdirectory(test_class2)
+add_subdirectory(test_class3)

@@ -27,3 +27,5 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
 
     #target_compile_options()
 endif()
+
+#add_test(NAME test3 COMMAND test3)

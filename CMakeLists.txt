@@ -8,6 +8,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
+# Enable testing
+enable_testing()
+
 add_subdirectory(test_class1)
 add_subdirectory(test_class2)
 add_subdirectory(test_class3)

@@ -21,3 +21,5 @@ if(CMAKE_BUILD_TYPE STREQUAL "Coverage")
     target_compile_options(test1 PRIVATE --coverage)
     target_link_libraries(test1 --coverage)
 endif()
+
+add_test(NAME test1 COMMAND test1)

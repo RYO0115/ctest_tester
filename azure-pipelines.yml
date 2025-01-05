@@ -1,0 +1,42 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# ビルドとテスト実行
+- script: |
+    mkdir -p build
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Coverage ..
+    make
+    ./test_runner --gtest_output=xml:test_results.xml
+    lcov --capture --directory . --output-file coverage.info
+    lcov --remove coverage.info '/usr/*' '*/gtest/*' '*/bits/*' --output-file coverage_filtered.info
+    genhtml coverage_filtered.info --output-directory coverage_html
+    gcovr --root . --xml-pretty --output coverage.xml
+  displayName: 'Build and Test'
+
+# テスト結果の公開
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: 'build/test_results.xml'
+    failTaskOnFailedTests: true
+  displayName: 'Publish Test Results'
+
+# カバレッジレポートの公開 (Cobertura)
+- task: PublishCodeCoverageResults@1
+  inputs:
+    codeCoverageTool: 'Cobertura'
+    summaryFileLocation: 'build/coverage.xml'
+    reportDirectory: 'build/coverage_html'
+  displayName: 'Publish Code Coverage Results'
+
+# HTMLレポートのアーティファクトとしての公開
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: 'build/coverage_html'
+    artifact: 'coverage_html'
+  displayName: 'Publish Coverage HTML'

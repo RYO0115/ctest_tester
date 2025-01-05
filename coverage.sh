@@ -15,12 +15,9 @@ cmake -DCMAKE_BUILD_TYPE=Coverage ..
 make
 
 cd ../
-ls ./bin
 
 # Run GTest
-./bin/test1
-./bin/test2
-./bin/test3
+./test_runner.sh
 
 # Covrerage
 lcov --capture --directory . --base-directory "$PROJECT_ROOT" --output-file coverage.info

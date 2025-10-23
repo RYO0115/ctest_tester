@@ -1,0 +1,190 @@
+name: Advanced CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  BUILD_TYPE: Coverage
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-20.04]
+        compiler: [gcc, clang]
+        build_type: [Debug, Release, Coverage]
+        exclude:
+          # Coverage builds only on gcc/ubuntu-latest
+          - compiler: clang
+            build_type: Coverage
+          - os: ubuntu-20.04
+            build_type: Coverage
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/apt
+          /usr/src/gtest
+        key: ${{ runner.os }}-deps-${{ hashFiles('**/CMakeLists.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-deps-
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libgtest-dev
+        
+        # Coverage tools (only for Coverage builds)
+        if [ "${{ matrix.build_type }}" = "Coverage" ]; then
+          sudo apt-get install -y lcov gcovr
+        fi
+        
+        # Install compiler
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          sudo apt-get install -y clang
+        fi
+        
+        # Build and install GTest
+        if [ ! -f /usr/local/lib/libgtest.a ]; then
+          cd /usr/src/gtest
+          sudo cmake CMakeLists.txt
+          sudo make
+          sudo cp lib/*.a /usr/lib || sudo cp *.a /usr/lib
+          sudo mkdir -p /usr/local/lib
+          sudo cp lib/*.a /usr/local/lib || sudo cp *.a /usr/local/lib
+        fi
+    
+    - name: Setup compiler
+      run: |
+        if [ "${{ matrix.compiler }}" = "clang" ]; then
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+        else
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+        fi
+        
+    - name: Create build directory
+      run: mkdir -p build
+      
+    - name: Configure CMake
+      run: |
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_C_COMPILER=$CC \
+              -DCMAKE_CXX_COMPILER=$CXX \
+              ..
+        
+    - name: Build project
+      run: |
+        cd build
+        make -j$(nproc)
+        
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure --verbose
+        
+    - name: Generate coverage (Coverage build only)
+      if: matrix.build_type == 'Coverage'
+      run: |
+        cd build
+        # Initialize coverage data
+        lcov --zerocounters --directory .
+        
+        # Run tests again to collect coverage
+        ctest --output-on-failure
+        
+        # Collect coverage data
+        lcov --capture --directory . --output-file coverage.info
+        
+        # Filter out system and test files
+        lcov --remove coverage.info \
+          '/usr/*' \
+          '*/gtest/*' \
+          '*/bits/*' \
+          '*/ext/*' \
+          '*/test/*' \
+          --output-file coverage_filtered.info
+        
+        # Generate HTML report
+        genhtml coverage_filtered.info --output-directory coverage_html
+        
+        # Generate XML report for tools
+        gcovr --root .. \
+              --xml-pretty \
+              --output coverage.xml \
+              --exclude '.*/usr/.*' \
+              --exclude '.*/gtest/.*' \
+              --exclude '.*/test/.*'
+        
+    - name: Upload coverage to Codecov
+      if: matrix.build_type == 'Coverage'
+      uses: codecov/codecov-action@v4
+      with:
+        file: build/coverage.xml
+        flags: unittests
+        name: codecov-${{ matrix.os }}-${{ matrix.compiler }}
+        fail_ci_if_error: false
+        
+    - name: Archive test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}
+        path: |
+          build/Testing/
+          
+    - name: Archive coverage HTML report
+      if: matrix.build_type == 'Coverage'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-html-report
+        path: build/coverage_html/
+        
+    - name: Archive coverage data
+      if: matrix.build_type == 'Coverage'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-data
+        path: |
+          build/coverage.xml
+          build/coverage_filtered.info
+
+  # ドキュメント生成ジョブ（オプション）
+  documentation:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install Doxygen
+      run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      
+    - name: Generate documentation
+      run: |
+        # Doxygenファイルがある場合のみ実行
+        if [ -f Doxyfile ]; then
+          doxygen Doxyfile
+        else
+          echo "Doxyfile not found, skipping documentation generation"
+        fi
+        
+    - name: Deploy to GitHub Pages
+      if: success()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./docs/html

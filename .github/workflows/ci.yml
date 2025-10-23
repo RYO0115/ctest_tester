@@ -1,0 +1,98 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+env:
+  BUILD_TYPE: Coverage
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential libgtest-dev lcov gcovr
+        
+        # GTestのビルドとインストール（Ubuntu 20.04以降では不要な場合もあります）
+        cd /usr/src/gtest
+        sudo cmake CMakeLists.txt
+        sudo make
+        sudo cp lib/*.a /usr/lib
+        sudo mkdir -p /usr/local/lib
+        sudo cp lib/*.a /usr/local/lib
+    
+    - name: Create build directory
+      run: mkdir -p build
+      
+    - name: Configure CMake
+      run: |
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ..
+        
+    - name: Build project
+      run: |
+        cd build
+        make -j$(nproc)
+        
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure --verbose
+        
+    - name: Generate coverage data
+      run: |
+        cd build
+        # 初期カバレッジデータを0に設定
+        lcov --zerocounters --directory .
+        
+        # テスト実行後のカバレッジデータを収集
+        lcov --capture --directory . --output-file coverage.info
+        
+        # システムファイルとテストライブラリを除外
+        lcov --remove coverage.info '/usr/*' '*/gtest/*' '*/bits/*' '*/ext/*' --output-file coverage_filtered.info
+        
+        # HTMLレポート生成
+        genhtml coverage_filtered.info --output-directory coverage_html
+        
+        # Coberturaフォーマットのカバレッジレポート生成
+        gcovr --root .. --xml-pretty --output coverage.xml --exclude '.*/usr/.*' --exclude '.*/gtest/.*'
+        
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: build/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        
+    - name: Archive coverage HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-html-report
+        path: build/coverage_html/
+        
+    - name: Archive coverage data
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-data
+        path: |
+          build/coverage.xml
+          build/coverage_filtered.info
+          
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: build/coverage.xml
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        minimum_coverage: 75
+        fail_below_threshold: false
